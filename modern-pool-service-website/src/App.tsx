@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
+import emailjs from "@emailjs/browser";
 
-/* ------------------------------------------------------------
-   Reusable SVG wave — seamless tile (uses 2x path so animation
+/* Reusable SVG wave — seamless tile (uses 2x path so animation
    can slide it by 50% without a visible seam)
    ------------------------------------------------------------ */
 function WaveLayer({
@@ -301,6 +301,7 @@ function Services() {
    ------------------------------------------------------------ */
 function Evaluation() {
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -318,10 +319,34 @@ function Evaluation() {
     btn.style.setProperty("--ry", `${e.clientY - rect.top}px`);
   };
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    // No backend yet — this is a landing-page form capture.
+    setLoading(true);
+
+    try {
+      // Send email via EmailJS
+      await emailjs.send(
+        "service_pool_service",
+        "template_pool_eval",
+        {
+          to_email: "Kaputgosling902@gmail.com",
+          from_name: form.name,
+          from_email: form.email,
+          phone: form.phone,
+          address: form.address,
+          poolType: form.poolType,
+          notes: form.notes,
+        },
+        "YOUR_EMAILJS_PUBLIC_KEY"
+      );
+
+      setSubmitted(true);
+    } catch (error) {
+      console.error("Error sending email:", error);
+      alert("Failed to send request. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -416,9 +441,9 @@ function Evaluation() {
                   <span className="text-sky-900/80">Anything we should know?</span>
                   <textarea rows={3} className="water-input mt-1" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="e.g. filter type, green water, unusual noise from pump" />
                 </label>
-                <button type="submit" onMouseDown={onRipple} className="ripple-btn mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-sky-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-cyan-200/70 hover:shadow-cyan-300/80">
-                  Submit request
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+                <button type="submit" disabled={loading} onMouseDown={onRipple} className="ripple-btn mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-sky-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-cyan-200/70 hover:shadow-cyan-300/80 disabled:opacity-60 disabled:cursor-not-allowed">
+                  {loading ? "Sending..." : "Submit request"}
+                  {!loading && <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
                 </button>
                 <p className="text-xs text-sky-900/60 text-center">We use your information only to contact you about your evaluation request.</p>
               </form>
@@ -508,7 +533,11 @@ function Footer() {
           <div className="text-white font-semibold">Contact</div>
           <ul className="mt-4 space-y-2 text-sky-200/80">
             <li>Phone — call during business hours</li>
-            <li>Email — reply within one business day</li>
+            <li>
+              <a href="mailto:Kaputgosling902@gmail.com" className="hover:text-white transition-colors">
+                Email — reply within one business day
+              </a>
+            </li>
             <li>Service area — local communities</li>
             <li>Hours — Monday through Saturday</li>
           </ul>
