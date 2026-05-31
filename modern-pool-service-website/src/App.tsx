@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
-import emailjs from "@emailjs/browser";
 
 /* Reusable SVG wave — seamless tile (uses 2x path so animation
    can slide it by 50% without a visible seam)
@@ -301,52 +300,19 @@ function Services() {
    ------------------------------------------------------------ */
 function Evaluation() {
   const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     name: "",
     email: "",
     phone: "",
-    address: "",
     poolType: "",
     notes: "",
   });
 
-  // Set ripple click position for buttons
   const onRipple = (e: MouseEvent<HTMLElement>) => {
     const btn = e.currentTarget as HTMLElement;
     const rect = btn.getBoundingClientRect();
     btn.style.setProperty("--rx", `${e.clientX - rect.left}px`);
     btn.style.setProperty("--ry", `${e.clientY - rect.top}px`);
-  };
-
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      // Send email via EmailJS
-      await emailjs.send(
-        "service_pool_service",
-        "template_pool_eval",
-        {
-          to_email: "Kaputgosling902@gmail.com",
-          from_name: form.name,
-          from_email: form.email,
-          phone: form.phone,
-          address: form.address,
-          poolType: form.poolType,
-          notes: form.notes,
-        },
-        "YOUR_EMAILJS_PUBLIC_KEY"
-      );
-
-      setSubmitted(true);
-    } catch (error) {
-      console.error("Error sending email:", error);
-      alert("Failed to send request. Please try again.");
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
@@ -406,7 +372,17 @@ function Evaluation() {
             <>
               <h3 className="text-xl font-semibold text-sky-950">Request your free evaluation</h3>
               <p className="mt-2 text-sm text-sky-900/70">Tell us a bit about your pool and we'll reach out to schedule a visit.</p>
-              <form onSubmit={onSubmit} className="mt-6 grid gap-4">
+              <form 
+                action="https://formsubmit.co/Kaputgosling902@gmail.com" 
+                method="POST" 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const form = e.currentTarget as HTMLFormElement;
+                  setSubmitted(true);
+                  setTimeout(() => form.submit(), 500);
+                }}
+                className="mt-6 grid gap-4"
+              >
                 <div className="grid sm:grid-cols-2 gap-4">
                   <label className="block text-sm">
                     <span className="text-sky-900/80">Name</span>
@@ -423,27 +399,23 @@ function Evaluation() {
                     <input required className="water-input mt-1" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="(555) 123-4567" />
                   </label>
                   <label className="block text-sm">
-                    <span className="text-sky-900/80">Address</span>
-                    <input required className="water-input mt-1" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="123 Main St" />
+                    <span className="text-sky-900/80">Type of pool</span>
+                    <select required className="water-input mt-1" value={form.poolType} onChange={(e) => setForm({ ...form, poolType: e.target.value })}>
+                      <option value="">Select one…</option>
+                      <option>Residential — in-ground</option>
+                      <option>Residential — above-ground</option>
+                      <option>Commercial</option>
+                      <option>Not sure</option>
+                    </select>
                   </label>
                 </div>
-                <label className="block text-sm">
-                  <span className="text-sky-900/80">Type of pool</span>
-                  <select required className="water-input mt-1" value={form.poolType} onChange={(e) => setForm({ ...form, poolType: e.target.value })}>
-                    <option value="">Select one…</option>
-                    <option>Residential — in-ground</option>
-                    <option>Residential — above-ground</option>
-                    <option>Commercial</option>
-                    <option>Not sure</option>
-                  </select>
-                </label>
                 <label className="block text-sm">
                   <span className="text-sky-900/80">Anything we should know?</span>
                   <textarea rows={3} className="water-input mt-1" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="e.g. filter type, green water, unusual noise from pump" />
                 </label>
-                <button type="submit" disabled={loading} onMouseDown={onRipple} className="ripple-btn mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-sky-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-cyan-200/70 hover:shadow-cyan-300/80 disabled:opacity-60 disabled:cursor-not-allowed">
-                  {loading ? "Sending..." : "Submit request"}
-                  {!loading && <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>}
+                <button type="submit" onMouseDown={onRipple} className="ripple-btn mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-sky-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-cyan-200/70 hover:shadow-cyan-300/80">
+                  Submit request
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
                 </button>
                 <p className="text-xs text-sky-900/60 text-center">We use your information only to contact you about your evaluation request.</p>
               </form>
@@ -455,7 +427,7 @@ function Evaluation() {
               </div>
               <h3 className="mt-4 text-xl font-semibold text-sky-950">Thanks — we got it.</h3>
               <p className="mt-2 text-sky-900/70 max-w-sm mx-auto">We'll review your request and reach out to schedule your free evaluation.</p>
-              <button onClick={() => { setSubmitted(false); setForm({ name:"", email:"", phone:"", address:"", poolType:"", notes:"" }); }} className="mt-6 inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-white px-5 py-2.5 text-sm font-medium text-sky-900 hover:bg-cyan-50">
+              <button onClick={() => { setSubmitted(false); setForm({ name:"", email:"", phone:"", poolType:"", notes:"" }); }} className="mt-6 inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-white px-5 py-2.5 text-sm font-medium text-sky-900 hover:bg-cyan-50">
                 Submit another request
               </button>
             </div>
