@@ -1,0 +1,228 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------
+   Water theme tokens
+   --------------------------------------------------------------- */
+:root {
+  --pool-50:  #ecfeff;
+  --pool-100: #cffafe;
+  --pool-200: #a5f3fc;
+  --pool-300: #67e8f9;
+  --pool-400: #22d3ee;
+  --pool-500: #06b6d4;
+  --pool-600: #0891b2;
+  --pool-700: #0e7490;
+  --pool-800: #155e75;
+  --pool-900: #0c4a6e;
+  --pool-950: #082f49;
+}
+
+html, body {
+  background: #f6fbff;
+  color: #0c4a6e;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Smooth, cheap transitions for interactive elements. */
+* {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Respect user motion preferences — critical for both accessibility and CPU. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+html { scroll-behavior: smooth; }
+
+/* ---------------------------------------------------------------
+   Water surface (hero)
+   A layered gradient background + slow SVG wave layers
+   --------------------------------------------------------------- */
+.water-surface {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(165, 243, 252, 0.65) 0%, rgba(165, 243, 252, 0) 60%),
+    linear-gradient(180deg, #e0f7ff 0%, #b2ebf2 35%, #4dd0e1 75%, #0891b2 100%);
+}
+
+/* Caustic-like highlight shapes — pure CSS, GPU-friendly transforms only */
+.water-shimmer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.water-shimmer::before,
+.water-shimmer::after {
+  content: "";
+  position: absolute;
+  width: 60vmax;
+  height: 60vmax;
+  top: -20vmax;
+  left: -10vmax;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.55), rgba(255,255,255,0) 60%);
+  filter: blur(30px);
+  will-change: transform;
+  animation: drift-1 18s ease-in-out infinite;
+}
+.water-shimmer::after {
+  top: auto;
+  left: auto;
+  right: -15vmax;
+  bottom: -25vmax;
+  background: radial-gradient(circle at 70% 70%, rgba(255,255,255,0.4), rgba(255,255,255,0) 60%);
+  animation: drift-2 24s ease-in-out infinite;
+}
+
+@keyframes drift-1 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(4vmax, -3vmax, 0) scale(1.08); }
+}
+@keyframes drift-2 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(-5vmax, 4vmax, 0) scale(1.05); }
+}
+
+/* Wave SVGs sit at the bottom of the hero — create a seamless "pool edge" feel. */
+.wave-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  width: 100%;
+  height: 140px;
+  pointer-events: none;
+  will-change: transform;
+}
+.wave-layer svg { width: 100%; height: 100%; display: block; }
+.wave-layer.w1 { animation: wave-slide 14s linear infinite; opacity: 0.55; }
+.wave-layer.w2 { animation: wave-slide 20s linear infinite reverse; opacity: 0.8; height: 110px; }
+.wave-layer.w3 { animation: wave-slide 28s linear infinite; opacity: 1; height: 80px; }
+
+@keyframes wave-slide {
+  0%   { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+/* ---------------------------------------------------------------
+   Card "water edge" — subtle ripple border via pseudo-element
+   --------------------------------------------------------------- */
+.pool-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 1.25rem;
+  box-shadow:
+    0 1px 2px rgba(8, 47, 73, 0.04),
+    0 12px 40px -12px rgba(8, 145, 178, 0.25);
+  overflow: hidden;
+}
+.pool-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 2px 4px rgba(8, 47, 73, 0.06),
+    0 20px 60px -16px rgba(8, 145, 178, 0.35);
+}
+.pool-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #22d3ee, #0ea5e9, #22d3ee, #0ea5e9);
+  background-size: 200% 100%;
+  animation: edge-shimmer 6s linear infinite;
+}
+@keyframes edge-shimmer {
+  0%   { background-position: 0% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ---------------------------------------------------------------
+   Button / interactive water ripple on click (CSS only)
+   --------------------------------------------------------------- */
+.ripple-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.ripple-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--rx, 50%) var(--ry, 50%), rgba(255,255,255,0.55), rgba(255,255,255,0) 40%);
+  opacity: 0;
+  transform: scale(0.6);
+  transition: transform 600ms ease-out, opacity 600ms ease-out;
+  pointer-events: none;
+}
+.ripple-btn:active::after {
+  opacity: 1;
+  transform: scale(1.6);
+  transition: transform 0ms, opacity 0ms;
+}
+
+/* ---------------------------------------------------------------
+   Floating bubble dots (pure CSS — tiny, GPU animated)
+   --------------------------------------------------------------- */
+.bubble {
+  position: absolute;
+  bottom: -20px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(255,255,255,0.2));
+  box-shadow: inset 0 0 4px rgba(255,255,255,0.8), 0 0 6px rgba(255,255,255,0.4);
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: bubble-rise linear infinite;
+}
+@keyframes bubble-rise {
+  0%   { transform: translate3d(0, 0, 0) scale(0.8); opacity: 0; }
+  10%  { opacity: 0.6; }
+  90%  { opacity: 0.4; }
+  100% { transform: translate3d(0, -120vh, 0) scale(1.2); opacity: 0; }
+}
+
+/* ---------------------------------------------------------------
+   Scroll reveal (simple, no external lib)
+   --------------------------------------------------------------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 600ms ease-out, transform 600ms ease-out;
+}
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------------------------------------------------------------
+   Evaluation form focus ring — water-style
+   --------------------------------------------------------------- */
+.water-input {
+  background: #ffffff;
+  border: 1px solid #cffafe;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  color: #0c4a6e;
+  outline: none;
+}
+.water-input:focus {
+  border-color: #22d3ee;
+  box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.2);
+}
+
+/* Utility: clamp text */
+.text-balance { text-wrap: balance; }
